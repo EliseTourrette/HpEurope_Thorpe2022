@@ -125,16 +125,16 @@ p <-ggplot(data, aes(x = -bins,y = 1 - ratio1,col = as.factor(mtype))) +
     stat_summary(fun = mean, geom = "line") +
     stat_summary(fun.data = mean_se,fun.args = list(mult = 1), geom = "errorbar", width = 0.05) +
     geom_point(mapping = aes(x = -fr,y = 1 - ratio1,col = factor(mtype)),alpha = 0.1, size = 0.25) +
-    expand_limits(y = c(0, 1.1)) +
-    labs(x = "Mutation score", y = " Bottleneck population \nancestry", color = "Mutation type", tag = "f") +
-    geom_segment(aes(x = -0.01,y = 1.2,xend = -0.1,yend = 1.2),
-                 col = "black",
-                 arrow = arrow(length = unit(0.05, "in"))) +
-    geom_text(x=-0.6, y=1.2, label="Excess \nbottleneck mutations", col = "black", size = 1.5) +
-    geom_segment(aes(x = 0.01,y = 1.2,xend = 0.1,yend = 1.2),
-                 col = "black",
-                 arrow = arrow(length = unit(0.05, "in"))) +
-    geom_text(x=0.58, y=1.2, label="Excess \nnon-bottleneck mutations", col = "black", size = 1.5)
+    #expand_limits(y = c(0, 1.1)) +
+    labs(x = "Mutation score", y = " Bottleneck population \nancestry", color = "Mutation type", tag = "f") #+
+    #geom_segment(aes(x = -0.01,y = 1.2,xend = -0.1,yend = 1.2),
+    #             col = "black",
+    #             arrow = arrow(length = unit(0.05, "in"))) +
+    #geom_text(x=-0.6, y=1.2, label="Excess \nbottleneck mutations", col = "black", size = 1.5) +
+    #geom_segment(aes(x = 0.01,y = 1.2,xend = 0.1,yend = 1.2),
+    #             col = "black",
+    #             arrow = arrow(length = unit(0.05, "in"))) +
+    #geom_text(x=0.58, y=1.2, label="Excess \nnon-bottleneck mutations", col = "black", size = 1.5)
 pf <- p + theme_cowplot() + theme(text = element_text(size = 7),axis.text = element_text(size = 7))
 #ggsave(paste0("4D.jpg"),width = 10,height = 8.5,units = "in",dpi = 500,scale = 0.75)
 
@@ -180,7 +180,7 @@ p <- ggplot(proportionTot[!(proportionTot$population %in% c("pre_split")) & prop
     geom_point(aes(x = G, y = proportion, color = population),size = 0.5) +
     scale_color_manual(name = "Ancestry", breaks = ancestryString, values = ancestryColor, labels = ancestryLab) +
     geom_segment(data = data.frame(admixture = seq(from = 8000, to = 15000, by = 500)), aes(x = admixture, y = 0 , xend = admixture, yend = 5), arrow = arrow(length = unit(0.05, "in"))) +
-    labs(x = "generation", y = "proportion", tag = "d") +
+    labs(x = "generation", y = "Ancestry proportion", tag = "d") +
     guides(color=guide_legend(nrow=1, byrow=TRUE))
 pd <- p + theme_cowplot() + theme(legend.spacing = unit(.001, 'mm'), legend.justification = c(0,0), legend.direction = "horizontal",legend.position = c(0,1), panel.background = element_rect(fill = 'white', colour = 'white'), text = element_text(size = 7),axis.text = element_text(size = 7)) 
     #ggsave(paste0("proportion_", irec, ".jpeg"),width = 8.5,height = 8.5,units = "in",dpi = 500,scale = 0.75)
@@ -300,20 +300,19 @@ for (ig in c(8000, 8100, 8200, 8300)) {
     
     anc10 <- anc10[anc10$Var2 <= 20000,] ## only look at the first 20000 sites
     
-    lab <- c( "no mutations",
-              "pop1 pre split \n",
-              "pop1, post split \npre admixture \n",
-              "pop1, post split \npost admixture \n",
-              "pop2, post split \npre admixture \n",
-              "pop2, post split \npost admixture \n") ## possible labels for the ancestry
-    colLab <- c("white",  "green4",  "red", "orange", "blue", "purple") ## color to be used for the different labels; same color scheme
+    lab <- c( "ancestral population \npre split \n",
+              "ancestral population \npost split \npre admixture \n",
+              "ancestral population \npost split \npost admixture \n",
+              "bottleneck population \npost split \npre admixture \n",
+              "bottleneck population \npost split \npost admixture \n") ## possible labels for the ancestry
+    colLab <- c("1" = "green4",  "2" = "red", "3" = "orange", "4" = "blue", "5" = "purple") ## color to be used for the different labels; same color scheme
     
 
     if(iplot == 1) {
         
-        plot1 <- ggplot(data = anc10, aes(x = Var2, y = as.factor(Var1))) +
-            scale_fill_manual(labels = lab[sort(unique(anc10$value + 1))], values = colLab[sort(unique(anc10$value + 1))]) +
-            labs(title = paste0("g = ", ig)) +
+        plot1 <- ggplot(data = anc10[anc10$value != 0,], aes(x = Var2, y = as.factor(Var1))) +
+            scale_fill_manual(labels = lab, values = colLab, drop = FALSE) +
+            labs(title = "At admixture") +
             geom_tile(aes(fill = as.factor(value), height = 0.7, width = Var3)) +  ## add the plus if want to add one of the geom_point ## with width = Var3, you only put a bar when there is a mutation
             # geom_raster(aes(fill = as.factor(value))) +
             #geom_point(data = s10, aes(x = Var2, y = as.factor(Var1), pch = as.factor(round(value,4)))) ## for each element of the ancestry matrix, will add a point whose shape will depend on the value of the selection coefficient
@@ -359,11 +358,11 @@ for (ig in c(8000, 8100, 8200, 8300)) {
         
     }
     
-    if(iplot == 2 | iplot == 3) {
+    if(iplot == 2) {
         
-        plot1 <- ggplot(data = anc10, aes(x = Var2, y = as.factor(Var1))) +
-            labs(title = paste0("g = ", ig), fill = "population and \nperiod of origin") +
-            scale_fill_manual(labels = lab[sort(unique(anc10$value + 1))], values = colLab[sort(unique(anc10$value + 1))]) +
+        plot1 <- ggplot(data = anc10[anc10$value != 0,], aes(x = Var2, y = as.factor(Var1))) +
+            labs(title = "After 100 generations", fill = "population and \nperiod of origin") +
+            scale_fill_manual(labels = lab, values = colLab, drop = FALSE) +
             geom_tile(aes(fill = as.factor(value), height = 0.7, width = Var3)) +  ## add the plus if want to add one of the geom_point ## with width = Var3, you only put a bar when there is a mutation
             # geom_raster(aes(fill = as.factor(value))) +
             #geom_point(data = s10, aes(x = Var2, y = as.factor(Var1), pch = as.factor(round(value,4)))) ## for each element of the ancestry matrix, will add a point whose shape will depend on the value of the selection coefficient
@@ -409,12 +408,62 @@ for (ig in c(8000, 8100, 8200, 8300)) {
         
     }
     
+    if(iplot == 3) {
+        
+        plot1 <- ggplot(data = anc10[anc10$value != 0,], aes(x = Var2, y = as.factor(Var1))) +
+            labs(title = "After 200 generations", fill = "population and \nperiod of origin") +
+            scale_fill_manual(labels = lab, values = colLab, drop = FALSE) +
+            geom_tile(aes(fill = as.factor(value), height = 0.7, width = Var3)) +  ## add the plus if want to add one of the geom_point ## with width = Var3, you only put a bar when there is a mutation
+            # geom_raster(aes(fill = as.factor(value))) +
+            #geom_point(data = s10, aes(x = Var2, y = as.factor(Var1), pch = as.factor(round(value,4)))) ## for each element of the ancestry matrix, will add a point whose shape will depend on the value of the selection coefficient
+            # geom_point(data = s10, aes(x = Var2, y = as.factor(Var1), size = as.factor(abs(round(value,4)))))  ## for each element of the ancestry matrix, will add a point whose size will depend on the value of the selection coefficient
+            theme_set(theme_bw()) + theme(
+                panel.grid = element_line(colour = NA),
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank(),
+                axis.text = element_blank(),
+                #axis.text.x = element_text(size = rel(0.5), angle = 45),
+                axis.line.x = element_line(),
+                panel.border = element_blank(),
+                axis.ticks.y = element_blank(),
+                text = element_text(size = 7))  ##get rid of the grey background and grid lines
+        
+        
+        plot2 <-
+            ggplot(data = data.frame(strain = 1:length(fitness10), fitness = fitness10), aes(x = fitness, y = as.factor(strain))) +
+            geom_point(size = 0.5) +
+            theme_set(theme_bw()) + theme(
+                panel.grid = element_line(colour = NA),
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank(),
+                axis.text = element_blank(),
+                #axis.text.x = element_text(size = rel(0.5), angle = 45),
+                panel.border = element_blank(),
+                axis.line = element_line(),
+                text = element_text(size = 7)) + ##get rid of the grey background and grid lines
+            xlim(0.31, 0.37)
+        
+        plot3 <- ggplot(data = data.frame(strain = 1:length(origin10), ratio = origin10), aes(x = ratio, y = as.factor(strain))) +
+            geom_point(size = 0.5) +
+            theme_set(theme_bw()) + theme(
+                panel.grid = element_line(colour = NA),
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank(),
+                axis.text = element_blank(),
+                #axis.text.x = element_text(size = rel(0.5), angle = 45),
+                panel.border = element_blank(),
+                axis.line = element_line(),
+                text = element_text(size = 7)) + ##get rid of the grey background and grid lines
+            xlim(0,1)
+        
+    }
+    
     if(iplot == 4) {
         
-        plot1 <- ggplot(data = anc10, aes(x = Var2, y = as.factor(Var1))) +
-            labs(title = paste0("g = ", ig), fill = "population and \nperiod of origin") +
+        plot1 <- ggplot(data = anc10[anc10$value != 0,], aes(x = Var2, y = as.factor(Var1))) +
+            labs(title = "After 300 generations", fill = "population and \nperiod of origin") +
             xlab("Physical position (bp)") +
-            scale_fill_manual(labels = lab[sort(unique(anc10$value + 1))], values = colLab[sort(unique(anc10$value + 1))]) +
+            scale_fill_manual(labels = lab, values = colLab, drop = FALSE) +
             geom_tile(aes(fill = as.factor(value), height = 0.7, width = Var3)) +  ## add the plus if want to add one of the geom_point ## with width = Var3, you only put a bar when there is a mutation
             # geom_raster(aes(fill = as.factor(value))) +
             #geom_point(data = s10, aes(x = Var2, y = as.factor(Var1), pch = as.factor(round(value,4)))) ## for each element of the ancestry matrix, will add a point whose shape will depend on the value of the selection coefficient
@@ -489,8 +538,8 @@ ptot <- ggdraw() +
     draw_plot(pc, 0.01, .26, .43, .23, scale = 1) +
     draw_plot(pb, 0.01, .51, .43, .23, scale = 1) +
     draw_plot(pa, 0.01, .76, .43, .23, scale = 1) +
-    draw_plot(pf, .46, 0.01, .53, .28, scale = 1) +
-    draw_plot(pe, .46, .31, .53, .66, scale = 1)
-ggsave(ptot, file = "F4.pdf", width = 180, height = 185, units = "mm")
+    draw_plot(pf, .46, 0.01, .53, .23, scale = 1) +
+    draw_plot(pe, .46, .26, .53, .73, scale = 1)
+ggsave(ptot, file = "Fig4.pdf", width = 180, height = 185, units = "mm")
 
 
