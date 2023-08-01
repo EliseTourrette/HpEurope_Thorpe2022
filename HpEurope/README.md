@@ -1,4 +1,4 @@
-directory for the publication Thorpe et al. 2022
+directory for the publication Thorpe et al. 2022 (https://doi.org/10.1038/s41467-022-34475-3)
 
 zenodo: https://doi.org/10.5281/zenodo.7130003
 
